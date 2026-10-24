@@ -6,8 +6,11 @@ import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.graphics.drawable.IconCompat
 import java.util.UUID
 
-/** What a pinned shortcut logs: the event title and the account calendar it goes to. */
-data class LogShortcut(val title: String, val calendar: AccountCalendar) {
+/**
+ * What a pinned shortcut logs: the event title, the account calendar it goes to and the
+ * event color key ([colorKey] null means the calendar's own color).
+ */
+data class LogShortcut(val title: String, val calendar: AccountCalendar, val colorKey: String?) {
 
     fun toShortcutInfo(context: Context): ShortcutInfoCompat {
         val intent = Intent(context, LogActivity::class.java)
@@ -15,6 +18,7 @@ data class LogShortcut(val title: String, val calendar: AccountCalendar) {
             .putExtra(EXTRA_TITLE, title)
             .putExtra(EXTRA_CALENDAR_ID, calendar.calendarId)
             .putExtra(EXTRA_ACCOUNT_NAME, calendar.accountName)
+            .putExtra(EXTRA_COLOR_KEY, colorKey)
         return ShortcutInfoCompat.Builder(context, UUID.randomUUID().toString())
             .setShortLabel(title)
             .setLongLabel(title)
@@ -28,13 +32,15 @@ data class LogShortcut(val title: String, val calendar: AccountCalendar) {
         private const val EXTRA_TITLE = "title"
         private const val EXTRA_CALENDAR_ID = "calendarId"
         private const val EXTRA_ACCOUNT_NAME = "accountName"
+        private const val EXTRA_COLOR_KEY = "colorKey"
 
         /** Reads a shortcut back from the intent it launched, or null if the intent is not one. */
         fun fromIntent(intent: Intent): LogShortcut? {
             val title = intent.getStringExtra(EXTRA_TITLE) ?: return null
             val accountName = intent.getStringExtra(EXTRA_ACCOUNT_NAME) ?: return null
             val calendarId = intent.getLongExtra(EXTRA_CALENDAR_ID, -1)
-            return LogShortcut(title, AccountCalendar(calendarId, accountName))
+            val colorKey = intent.getStringExtra(EXTRA_COLOR_KEY)
+            return LogShortcut(title, AccountCalendar(calendarId, accountName), colorKey)
         }
     }
 }

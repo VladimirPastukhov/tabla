@@ -3,6 +3,9 @@
     <string name="setup_title">New Tabla button</string>
     <string name="event_name">Event name</string>
     <string name="account">Google account</string>
+    <string name="color">Color</string>
+    <string name="color_calendar">Calendar color</string>
+    <string name="color_n">Color %1$d</string>
     <string name="create">Create</string>
     <string name="no_accounts">No Google accounts with a calendar were found on this device.</string>
     <string name="permission_needed">Tabla needs calendar access to add events.</string>

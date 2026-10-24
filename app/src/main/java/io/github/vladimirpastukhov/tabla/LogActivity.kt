@@ -30,7 +30,7 @@ class LogActivity : Activity() {
             ?: return getString(R.string.account_missing, shortcut.calendar.accountName)
 
         val start = quarterHourStart(Instant.now(), ZoneId.systemDefault())
-        repository.insertLogEvent(calendar.calendarId, shortcut.title, start)
+        repository.insertLogEvent(calendar.calendarId, shortcut.title, start, shortcut.colorKey)
             ?: return getString(R.string.add_failed)
 
         val timeFormat = DateFormat.getTimeFormat(this)

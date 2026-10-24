@@ -15,6 +15,8 @@ not a reminder for the future.
    A setup screen opens and asks for:
    - **Event name** — free text, e.g. "Pill".
    - **Google account** — chosen from the Google accounts already on the device.
+   - **Color** — the calendar's own color (default) or one of the account's
+     Google event colors.
 2. **Place.** The launcher pins the result as a shortcut icon. It can sit on the
    home screen or in the bottom dock.
 3. **Tap.** Each tap creates a 15-minute event in that account's main calendar
@@ -29,6 +31,7 @@ change one, delete it and create a new one.
 |-----------|-------|
 | Title     | Name given at setup |
 | Calendar  | Main (primary) calendar of the chosen account |
+| Color     | Color chosen at setup; calendar color if none |
 | Start     | Current time rounded down to the quarter hour (:00, :15, :30, :45) |
 | Duration  | Always 15 minutes |
 | Reminders | None — the event never notifies |
@@ -57,6 +60,9 @@ There is no double-tap protection: every tap creates a new event.
 - **Account picker** lists calendars with `ACCOUNT_TYPE = "com.google"` and
   `IS_PRIMARY = 1`, one per account. The shortcut stores the calendar ID (plus
   account name as a fallback to find the calendar again if the ID changes).
+- **Colors** come from `CalendarContract.Colors` (`TYPE_EVENT`) for the chosen
+  account; the event stores `EVENT_COLOR_KEY` so Google syncs the color. If the
+  key disappears from the account, the event falls back to the calendar color.
 - **Tap handling** goes to a transparent, no-UI activity that inserts the event,
   shows the toast and finishes immediately.
 - **Stack:** Kotlin, Jetpack Compose for the setup screen, min SDK 26

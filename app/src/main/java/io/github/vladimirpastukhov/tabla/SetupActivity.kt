@@ -8,15 +8,22 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -34,15 +41,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.ShortcutManagerCompat
 
 /**
- * Asks for the event name and account, then creates the pinned shortcut.
+ * Asks for the event name, account and color, then creates the pinned shortcut.
  *
  * Opened by the launcher's shortcut picker (ACTION_CREATE_SHORTCUT: the shortcut is returned
  * as the activity result) or from the app drawer (the shortcut is pinned via requestPinShortcut).
@@ -58,6 +69,7 @@ class SetupActivity : ComponentActivity() {
                 SetupScreen(
                     hasPermission = { hasCalendarPermission() },
                     loadCalendars = { repository.mainCalendars() },
+                    loadColors = { repository.eventColors(it.accountName) },
                     onCreate = ::createShortcut,
                 )
             }
@@ -82,6 +94,7 @@ class SetupActivity : ComponentActivity() {
 private fun SetupScreen(
     hasPermission: () -> Boolean,
     loadCalendars: () -> List<AccountCalendar>,
+    loadColors: (AccountCalendar) -> List<EventColor>,
     onCreate: (LogShortcut) -> Unit,
 ) {
     var granted by remember { mutableStateOf(hasPermission()) }
@@ -102,7 +115,7 @@ private fun SetupScreen(
         ) {
             Text(stringResource(R.string.setup_title), style = MaterialTheme.typography.headlineSmall)
             if (granted) {
-                SetupForm(calendars = remember { loadCalendars() }, onCreate = onCreate)
+                SetupForm(calendars = remember { loadCalendars() }, loadColors = loadColors, onCreate = onCreate)
             } else {
                 Text(stringResource(R.string.permission_needed))
                 Button(onClick = { permissionLauncher.launch(CALENDAR_PERMISSIONS) }) {
@@ -114,7 +127,11 @@ private fun SetupScreen(
 }
 
 @Composable
-private fun SetupForm(calendars: List<AccountCalendar>, onCreate: (LogShortcut) -> Unit) {
+private fun SetupForm(
+    calendars: List<AccountCalendar>,
+    loadColors: (AccountCalendar) -> List<EventColor>,
+    onCreate: (LogShortcut) -> Unit,
+) {
     var name by remember { mutableStateOf("") }
     var selected by remember { mutableStateOf(calendars.singleOrNull()) }
 
@@ -154,13 +171,68 @@ private fun SetupForm(calendars: List<AccountCalendar>, onCreate: (LogShortcut) 
     }
 
     val calendar = selected
+    // Colors belong to the account, so switching account resets the choice to the calendar color.
+    val colors = remember(calendar) { calendar?.let(loadColors).orEmpty() }
+    var colorKey by remember(calendar) { mutableStateOf<String?>(null) }
+    if (calendar != null) {
+        Text(stringResource(R.string.color), style = MaterialTheme.typography.titleMedium)
+        ColorPicker(
+            calendarColor = calendar.color,
+            colors = colors,
+            selectedKey = colorKey,
+            onSelect = { colorKey = it },
+        )
+    }
+
     Button(
-        onClick = { calendar?.let { onCreate(LogShortcut(name.trim(), it)) } },
+        onClick = { calendar?.let { onCreate(LogShortcut(name.trim(), it, colorKey)) } },
         enabled = name.isNotBlank() && calendar != null,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Text(stringResource(R.string.create))
     }
+}
+
+/** Swatches for the calendar's own color (key null) followed by the account's event colors. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ColorPicker(
+    calendarColor: Int,
+    colors: List<EventColor>,
+    selectedKey: String?,
+    onSelect: (String?) -> Unit,
+) {
+    FlowRow(Modifier.selectableGroup()) {
+        ColorSwatch(
+            color = calendarColor,
+            label = stringResource(R.string.color_calendar),
+            selected = selectedKey == null,
+            onClick = { onSelect(null) },
+        )
+        colors.forEachIndexed { index, color ->
+            ColorSwatch(
+                color = color.color,
+                label = stringResource(R.string.color_n, index + 1),
+                selected = selectedKey == color.key,
+                onClick = { onSelect(color.key) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ColorSwatch(color: Int, label: String, selected: Boolean, onClick: () -> Unit) {
+    val ring = if (selected) MaterialTheme.colorScheme.onSurface else Color.Transparent
+    Box(
+        Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
+            .semantics { contentDescription = label }
+            .border(3.dp, ring, CircleShape)
+            .padding(7.dp)
+            .background(Color(color), CircleShape),
+    )
 }
 
 @Composable
