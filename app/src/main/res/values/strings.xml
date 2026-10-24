@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Tabla</string>
+    <string name="setup_title">New Tabla button</string>
+    <string name="event_name">Event name</string>
+    <string name="account">Google account</string>
+    <string name="create">Create</string>
+    <string name="no_accounts">No Google accounts with a calendar were found on this device.</string>
+    <string name="permission_needed">Tabla needs calendar access to add events.</string>
+    <string name="grant_permission">Grant access</string>
+    <string name="pin_unsupported">Your launcher does not support pinned shortcuts.</string>
+    <string name="added">Added: %1$s %2$s–%3$s</string>
+    <string name="add_failed">Could not add the event.</string>
+    <string name="account_missing">Account %1$s is no longer on this device. Recreate the button.</string>
+</resources>

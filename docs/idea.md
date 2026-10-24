@@ -11,7 +11,8 @@ not a reminder for the future.
 ## User flow
 
 1. **Create.** The user adds a "Tabla" shortcut from the launcher's
-   widgets/shortcuts picker. A setup screen opens and asks for:
+   widgets/shortcuts picker, or opens the Tabla app from the app drawer.
+   A setup screen opens and asks for:
    - **Event name** — free text, e.g. "Pill".
    - **Google account** — chosen from the Google accounts already on the device.
 2. **Place.** The launcher pins the result as a shortcut icon. It can sit on the
